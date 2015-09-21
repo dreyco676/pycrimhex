@@ -13,6 +13,7 @@ class CrimsonHexagonClient(object):
     def __init__(self, endpoint, monitor, start_dt, end_dt, username, password):
         self.start_time = datetime.now()
         self.rate_window = 60
+        self.max_results = 10000
         self._auth()
         self.endpoint = endpoint
         self.monitor = monitor
@@ -55,12 +56,11 @@ class CrimsonHexagonClient(object):
 
     def get_endpoint_timeframe(self):
         result_df = DataFrame()
-        max_results = 10000
         res_len = self._make_req(self.chunk_start, self.chunk_end)
         self._wait_for_rate_limit()
         # check to see if there are possibly more results to get if close to max_result
         # this will make additional requests until either the results are smaller than 9k or the timeframe is 1day
-        if res_len / max_results > .90:
+        if res_len / self.max_results > .90:
             delta = self.chunk_end - self.chunk_start
             step_size = math.floor(delta.days / 2)
             self.chunk_end = self.chunk_start + timedelta(days=step_size)
